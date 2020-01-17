@@ -1,0 +1,14 @@
+pragma solidity 0.5.12;
+
+contract Ownable {
+    address public owner;
+
+    modifier onlyOwner(){
+        require(msg.sender == owner, 'Sender must be owner');
+        _;
+    }
+
+    constructor() public{
+        owner = msg.sender;
+    }
+}
