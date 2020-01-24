@@ -34,8 +34,25 @@ contract('PlaceCoinFlipBet', async function (accounts) {
         });
     });
 
-    describe('Max bet', function() {
-        it('should return the maximum allowed bet as 1% of the contract balance');
+    describe('bet amount', function () {
+        beforeEach(async function() {
+            await contractInstance.addFunds({value: web3.utils.toWei('1', 'ether')});
+        })
+        it('should return the maximum allowed bet as 1% of the contract balance', async function() {
+            const contractBalance = await contractInstance.balance();
+            const expected = contractBalance.div(new BN('100'));
+
+            const result = await contractInstance.maxBet();
+
+            assert.equal(result.toString(10), expected.toString(10), 'invalid max bet');
+        });
+
+        it('should return the minimum bet as 1 milli ether', async function() {
+            const expected = web3.utils.toWei(new BN('1'), 'milli');
+            const result = await contractInstance.minBet();
+
+            assert.equal(result.toString(10), expected.toString(10), 'invalid min bet');
+        });
     });
 
     describe('Place bet', function () {
@@ -46,6 +63,26 @@ contract('PlaceCoinFlipBet', async function (accounts) {
             await contractInstance.addFunds({ value: web3.utils.toWei(new BN('1'), 'ether') });
             betAmount = web3.utils.toWei(new BN('10'), 'milli');
             betOn = true;
+        });
+
+        it('should REVERT if the player bet is above the max allowable bet', async function() {
+            betAmount = web3.utils.toWei(new BN('20'), 'milli');
+            const bal = await contractInstance.balance();
+            const maxBet = await contractInstance.maxBet();
+            assert(betAmount.gt(maxBet), 'precondition failed: bet is too small');
+            assert(betAmount.lt(bal), 'precondition failed: bet is more than contract balance');
+
+            truffleAssert.reverts(
+                contractInstance.placeBet(betOn, { from: accounts[1], value: betAmount }));
+        });
+
+        it('should REVERT if the player bet is below the min allowable bet', async function() {
+            betAmount = web3.utils.toWei(new BN('20'), 'micro');
+            const minBet = await contractInstance.minBet();
+            assert(betAmount.lt(minBet), 'precondition failed: bet too big');
+
+            truffleAssert.reverts(
+                contractInstance.placeBet(betOn, { from: accounts[1], value: betAmount }));
         });
 
         describe('On winning result', function () {
@@ -88,9 +125,7 @@ contract('PlaceCoinFlipBet', async function (accounts) {
                 assert(playerBalAfter.gt(playerBalBefore), 'winnings not sent to player');
             });
 
-            it('should REVERT if the player bet is above the max allowable bet');
-
-            it('should REVERT if there is not enough funds to cover the winnings', async function() {
+            it('should REVERT if there is not enough funds to cover the winnings', async function () {
                 const betTooBig = web3.utils.toWei(new BN('10'), 'ether');
                 const contractBalBefore = new BN(await web3.eth.getBalance(contractInstance.address));
                 assert(betTooBig.gt(contractBalBefore), 'precondition failed: bet not big enough');
@@ -104,11 +139,46 @@ contract('PlaceCoinFlipBet', async function (accounts) {
             beforeEach(async function () {
                 await contractInstance.setFlipResult(false);
                 await assert(contractInstance.flipCoin(), false, 'precondition failed');
-                
             });
 
-            it('should emit a losing BetResult event with a negative payout');
-            it('should add the bet to the contract balance');
+            it('should emit a losing BetResult event with zero payout', async function () {
+                const expectedResult = {
+                    id: new BN('1'),
+                    player: accounts[2],
+                    amount: betAmount,
+                    betOn: betOn,
+                    flipResult: !betOn,
+                    payout: new BN('0')
+                };
+                const result = await contractInstance.placeBet(betOn, { from: expectedResult.player, value: expectedResult.amount });
+
+                truffleAssert.eventEmitted(result, 'BetResult');
+                truffleAssert.eventEmitted(result, 'BetResult', e => {
+                    return e.id.toString(10) === expectedResult.id.toString(10)
+                        && e.player === expectedResult.player
+                        && e.amount.toString(10) === expectedResult.amount.toString(10)
+                        && e.betOn === expectedResult.betOn
+                        && e.flipResult === expectedResult.flipResult
+                        && e.payout.toString(10) === expectedResult.payout.toString(10);
+                }, 'event params incorrect');
+            });
+
+            it('should add the bet to the contract balance', async function () {
+                const playerBalBefore = new BN(await web3.eth.getBalance(accounts[2]));
+                const contractBalBefore = new BN(await web3.eth.getBalance(contractInstance.address));
+                const balancePropBefore = await contractInstance.balance();
+                const expectedContractBal = contractBalBefore.add(betAmount);
+                assert.equal(contractBalBefore.toString(10), balancePropBefore.toString(10), 'precondition failed: blances not equal');
+
+                await contractInstance.placeBet(betOn, { from: accounts[2], value: betAmount });
+
+                const contractBalAfter = new BN(await web3.eth.getBalance(contractInstance.address));
+                const playerBalAfter = new BN(await web3.eth.getBalance(accounts[2]));
+                const balancePropAfter = await contractInstance.balance();
+                assert.equal(contractBalAfter.toString(10), expectedContractBal.toString(10), 'contract bal did not increase');
+                assert.equal(balancePropAfter.toString(10), expectedContractBal.toString(10), 'balance prop not updated');
+                assert(playerBalAfter.lt(playerBalBefore), 'player balance should decrease');
+            });
         });
     });
 

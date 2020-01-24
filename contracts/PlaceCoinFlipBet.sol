@@ -8,14 +8,25 @@ contract PlaceCoinFlipBet is Ownable {
     uint private betId = 0;
 
     function placeBet(bool betOn) public payable returns (bool) {
+        require(msg.value <= maxBet(), 'bet too high');
+        require(msg.value >= minBet(), 'bet too low');
         bool result = flipCoin();
         uint payoutAmt = payout(msg.sender, betOn, result, msg.value);
         emit BetResult(++betId, msg.sender, msg.value, betOn, result, payoutAmt);
         return true;
     }
 
+    function minBet() public pure returns(uint) {
+        return 0.001 ether;
+    }
+
+    function maxBet() public view returns(uint) {
+        return balance / 100;
+    }
+
     function payout(address payable player, bool betOn, bool flipResult, uint betAmount) private returns(uint) {
         if (betOn != flipResult) {
+            balance += betAmount;
             return 0;
         }
         uint winnings = betAmount * 2;
