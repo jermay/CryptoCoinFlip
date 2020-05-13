@@ -1,0 +1,11 @@
+<div class="form-group" [formGroup]="betForm">
+    <label>Bet (Min: {{minBet.toString(10)}} Max: {{maxBet.toString(10)}}</label>
+    <input type="text" class="form-control" formControlName="betAmount" placeholder="Bet Amount">    
+    <select class="form-control" formControlName="betOn">
+        <option value="false">Heads</option>
+        <option value="true">Tails</option>
+    </select>
+    <button type="button" class="btn btn-primary" (click)="placeBet()">Flip Coin!</button>
+</div>
+<div>bet on: {{betForm.value.betOn}} amount: {{betForm.value.betAmount}}</div>
+<div id="message">{{message}}</div>
