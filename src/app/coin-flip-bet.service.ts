@@ -13,7 +13,7 @@ import { BetEvent } from './bet-event.js';
 })
 export class CoinFlipBetService {
 
-  private readonly contractAddress = '0xDf7d6a80e938ecA5a30E73AC108449126db2A70A';
+  private readonly contractAddress = '0x934775B5E372AB841e9D7d1C33dF0D12cC411A25';
   private contract: Promise<Contract>;
 
   constructor() {
@@ -23,8 +23,8 @@ export class CoinFlipBetService {
   private getContract(): Promise<Contract> {
     if (this.contract) {
       return this.contract;
-    }
-    return window.ethereum.enable().then(accounts => {
+    }    
+    this.contract = window.ethereum.enable().then(accounts => {
       let c = new web3.eth.Contract(
         data.abi as AbiItem[],
         this.contractAddress,
@@ -33,6 +33,7 @@ export class CoinFlipBetService {
       console.log(c);
       return c;
     });
+    return this.contract;
   }
 
   minBet(): Promise<BN> {
@@ -50,12 +51,9 @@ export class CoinFlipBetService {
   placeBet(betOn: boolean, amount: BN): Promise<BetEvent> {
     return this.getContract()
       .then(c => c.methods.placeBet(betOn)
-        .send({ value: web3.utils.toWei(amount, 'milli') })
-        .on('receipt', res => {
-          console.log(res);
-          let betEvent = res.nsactionIndex[0].events.BetResult;
-          console.log(betEvent);
-          return betEvent;
-        }));
+        .send({ value: amount }))
+      .then(res => res.events.BetResult.returnValues);
   }
+
+
 }
