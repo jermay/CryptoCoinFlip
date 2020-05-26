@@ -1,7 +1,7 @@
 pragma solidity 0.5.12;
 
 contract Ownable {
-    address public owner;
+    address payable public owner;
 
     modifier onlyOwner(){
         require(msg.sender == owner, 'Sender must be owner');
