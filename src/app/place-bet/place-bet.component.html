@@ -16,6 +16,6 @@
         </div>
         <button type="button" class="btn btn-primary" (click)="placeBet()">Flip Coin!</button>
     </div>
-    <div id="message">{{message}}</div>
-    <div *ngFor="let r of betResults">Bet on: {{r.betOn ? "Heads" : "Tails"}}, Result: {{r.flipResult ? "Heads" : "Tails"}} {{r.flipResult ? "YOU WIN! +" + web3.utils.fromWei(r.payout) + " ETH": "Try again"}}</div>
+    <div id="message">{{message}}</div>    
+    <app-bet-event *ngFor="let r of betResults" [betResult]="r"></app-bet-event>
 </div>

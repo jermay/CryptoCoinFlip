@@ -5,11 +5,13 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { AppComponent } from './app.component';
 import { PlaceBetComponent } from './place-bet/place-bet.component';
 import { CoinFlipBetService } from './coin-flip-bet.service';
+import { BetEventComponent } from './bet-event/bet-event.component';
 
 @NgModule({
   declarations: [
     AppComponent,
-    PlaceBetComponent
+    PlaceBetComponent,
+    BetEventComponent
   ],
   imports: [
     BrowserModule,
