@@ -7,7 +7,7 @@
             <div class="card-body">
                 <h5 class="card-title">You Win!</h5>
             </div>
-            <p class="card-text">Bet on: {{betResult.betOn ? "Heads" : "Tails"}}, Result: {{betResult.flipResult ? "Heads" : "Tails"}} {{"YOU WIN! +" + web3.utils.fromWei(betResult.payout) + " ETH"}}</p>
+            <p class="card-text">Result: {{betResult.flipResult ? "Heads" : "Tails"}} {{"YOU WIN! +" + web3.utils.fromWei(betResult.payout) + " ETH"}}</p>
             <p class="card-text"><small>#{{betResult.id}}</small></p>
         </div>
     </div>    
@@ -21,7 +21,7 @@
             <div class="card-body">                
                 <h5 class="card-title">Try Again</h5>
             </div>
-            <p class="card-text">Bet on: {{betResult.betOn ? "Heads" : "Tails"}}, Result: {{betResult.flipResult ? "Heads" : "Tails"}}</p>
+            <p class="card-text">Result: {{betResult.flipResult ? "Heads" : "Tails"}}</p>
             <p class="card-text"><small>#{{betResult.id}}</small></p>
         </div>
     </div>    

@@ -13,7 +13,10 @@ import { BetEvent } from './bet-event.js';
 })
 export class CoinFlipBetService {
 
-  private readonly contractAddress = '0x934775B5E372AB841e9D7d1C33dF0D12cC411A25';
+  balance = new BN('0');
+
+  // TODO: move contract address to a config file
+  private readonly contractAddress = '0x1E59C4C2E99B4370c550964C82d737Db1DAAd3De';
   private contract: Promise<Contract>;
 
   constructor() {
@@ -36,24 +39,46 @@ export class CoinFlipBetService {
     return this.contract;
   }
 
+  deposit(amount: BN): Promise<any> {
+    return this.getContract()
+      .then(c => c.methods.addFunds().send({value: amount}))
+      .then(() => this.getBalance());
+  }
+
+  withdraw(amount: BN): Promise<any> {
+    return this.getContract()
+      .then(c => c.methods.withdrawFunds(amount).send())
+      .then(() => this.getBalance());
+  }
+
+  getBalance(): Promise<BN> {
+    return this.getContract()
+      .then(c => c.methods.getMyBalance().call())
+      .then(balance => {
+        this.balance = new BN(balance);
+        return this.balance;
+      });
+  }
+
   minBet(): Promise<BN> {
     return this.getContract()
       .then(c => c.methods.minBet().call())
-      .then(minBet => minBet);
+      .then(minBet => new BN(minBet));
   }
 
   maxBet(): Promise<BN> {
     return this.getContract()
       .then(c => c.methods.maxBet().call())
-      .then(maxBet => maxBet);
+      .then(maxBet => new BN(maxBet));
   }
 
   placeBet(betOn: boolean, amount: BN): Promise<BetEvent> {
     return this.getContract()
-      .then(c => c.methods.placeBet(betOn)
-        .send({ value: amount }))
-      .then(res => res.events.BetResult.returnValues);
+      .then(c => c.methods.placeBet(betOn, amount).send())
+      .then(res => {
+        this.getBalance();
+        return res.events.BetResult.returnValues;
+      });
   }
-
 
 }

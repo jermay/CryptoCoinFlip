@@ -1,7 +1,7 @@
 import BN from 'bn.js';
 import Web3 from 'web3';
 import { Component, OnInit } from '@angular/core';
-import { FormControl, FormBuilder, FormGroup } from '@angular/forms';
+import { FormBuilder, FormGroup } from '@angular/forms';
 import { CoinFlipBetService } from '../coin-flip-bet.service.js';
 import { BetEvent } from '../bet-event.js';
 
@@ -22,14 +22,22 @@ export class PlaceBetComponent implements OnInit {
 
   constructor(private service: CoinFlipBetService, private fb: FormBuilder) { }
 
-  ngOnInit() {
-    this.service.minBet().then(b => this.minBet = b);
-    this.service.maxBet().then(b => this.maxBet = b);
+  ngOnInit() {    
+    this.updateMaxBet();    
 
     this.betForm = this.fb.group({
       betOn: ['false'],
       betAmount: ['0.001']
     });
+    this.service.minBet().then(b => this.minBet = b);
+  }
+
+  async updateMaxBet() {
+    await this.service.getBalance();
+    await this.service.maxBet().then(b => this.maxBet = b);
+    if (this.service.balance.lt(this.maxBet)) {
+      this.maxBet = this.service.balance;
+    }
   }
 
   placeBet() {
@@ -48,7 +56,7 @@ export class PlaceBetComponent implements OnInit {
       }).catch(err => {
         this.message = 'Error sending bet';
         console.log(err);
-      });
+      }).finally(() => this.updateMaxBet());
   }
 
 }
