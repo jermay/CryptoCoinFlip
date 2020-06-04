@@ -66,6 +66,44 @@ contract('PlaceCoinFlipBet', async function (accounts) {
             betOn = true;
         });
 
+        it('should emit a BetPlaced event', async function() {
+            const expectedResult = {
+                player: accounts[1],
+                amount: betAmount,
+                betOn: betOn,
+            };
+            const result = await contractInstance.placeBet(
+                expectedResult.betOn, expectedResult.amount, { from: expectedResult.player });
+
+            truffleAssert.eventEmitted(result, 'BetPlaced');
+            truffleAssert.eventEmitted(result, 'BetPlaced', e => {
+                return !!e.id
+                    && e.player === expectedResult.player                    
+                    && e.amount.toString(10) === expectedResult.amount.toString(10)
+                    && e.betOn === expectedResult.betOn;
+            }, 'event params incorrect');
+        });
+
+        it('should store the bet and amount in the mapping', async function() {
+            const expectedResult = {
+                player: accounts[1],
+                amount: betAmount,
+                betOn: betOn,
+            };
+
+            const res = await contractInstance.placeBet(
+                expectedResult.betOn, expectedResult.amount, { from: expectedResult.player });
+            
+            truffleAssert.eventEmitted(res, 'BetPlaced');
+            const betEvent = res.logs.find(l => l.event = 'BetPlaced');
+            const queryId = betEvent.args.id;
+            const result = await contractInstance.getBet(queryId);
+
+            assert.equal(result.player, expectedResult.player, 'player address incorrect');
+            assert.equal(result.amount.toString(10), expectedResult.amount.toString(10), 'amount incorrect');
+            assert.equal(result.betOn, expectedResult.betOn, 'betOn incorrect');
+        });
+
         it('should REVERT if the player bet is above their balance', async function() {
             const betTooHigh = web3.utils.toWei(new BN('7'), 'milli');
             const maxBet = await contractInstance.maxBet();
@@ -97,12 +135,11 @@ contract('PlaceCoinFlipBet', async function (accounts) {
 
         describe('On winning result', function () {
             beforeEach(async function () {
-                await contractInstance.testFlipResult(true);
+                await contractInstance.testFlipResult(betOn);
             });
 
             it('should emit a winning BetResult event with a 2x positive payout', async function () {
                 const expectedResult = {
-                    id: new BN('1'),
                     flipResult: betOn,
                     payout: betAmount.mul(new BN('2'))
                 };
@@ -110,8 +147,7 @@ contract('PlaceCoinFlipBet', async function (accounts) {
 
                 truffleAssert.eventEmitted(result, 'BetResult');
                 truffleAssert.eventEmitted(result, 'BetResult', e => {
-                    return e.id.toString(10) === expectedResult.id.toString(10)
-                        && e.flipResult === expectedResult.flipResult
+                    return e.flipResult === expectedResult.flipResult
                         && e.payout.toString(10) === expectedResult.payout.toString(10);
                 }, 'event params incorrect');
             });
@@ -151,7 +187,6 @@ contract('PlaceCoinFlipBet', async function (accounts) {
 
             it('should emit a losing BetResult event with zero payout', async function () {
                 const expectedResult = {
-                    id: new BN('1'),
                     flipResult: !betOn,
                     payout: new BN('0')
                 };
@@ -159,7 +194,7 @@ contract('PlaceCoinFlipBet', async function (accounts) {
 
                 truffleAssert.eventEmitted(result, 'BetResult');
                 truffleAssert.eventEmitted(result, 'BetResult', e => {
-                    return e.id.toString(10) === expectedResult.id.toString(10)
+                    return !!e.id
                         && e.flipResult === expectedResult.flipResult
                         && e.payout.toString(10) === expectedResult.payout.toString(10);
                 }, 'event params incorrect');

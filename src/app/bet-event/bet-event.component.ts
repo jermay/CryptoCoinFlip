@@ -1,6 +1,6 @@
 import Web3 from 'web3';
 import { Component, OnInit, Input } from '@angular/core';
-import { BetEvent } from '../bet-event';
+import { BetResultEvent } from '../bet-result-event';
 
 @Component({
   selector: 'app-bet-event',
@@ -9,7 +9,7 @@ import { BetEvent } from '../bet-event';
 })
 export class BetEventComponent implements OnInit {
 
-  @Input("betResult") betResult: BetEvent;
+  @Input("betResult") betResult: BetResultEvent;
 
   readonly web3 = new Web3(Web3.givenProvider);
 

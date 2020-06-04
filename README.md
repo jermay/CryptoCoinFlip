@@ -2,6 +2,18 @@
 
 Ethereum based coin flip betting DApp
 
+To run the project:
+1. Clone the githup repo
+2. `npm install`
+3. Start Gnache. Import an account from Gnache into MetaMask.
+4. Deploy the smart contracts in Truffle.
+   * Run the smart contract tests in truffle with the test command
+5. Copy the `PlaceCoinFlipBet` contract address into the `CoinFlipBetService` in `/src/coin-flip-bet-service.ts`
+   * `private readonly contractAddress = '0x...';`
+   * I'll be looking into how to move this into a config file for phase 2
+6. Start app with `npm start` or `ng serve`
+7. Open `http://localhost:4200` in the browser
+
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 8.3.23.
 
 ## Development server

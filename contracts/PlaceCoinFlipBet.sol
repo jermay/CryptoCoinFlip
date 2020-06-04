@@ -1,27 +1,47 @@
 pragma solidity 0.5.12;
+import './provableAPI.sol';
 import './Ownable.sol';
 
-contract PlaceCoinFlipBet is Ownable {
+contract PlaceCoinFlipBet is Ownable, usingProvable {
+
+    struct Bet {
+        address player;
+        bool betOn;
+        uint amount;
+    }
 
     mapping(address => uint) balances;
-    mapping(uint => address) bets; // queryId => player address
+    mapping(bytes32 => Bet) bets; // queryId => Bet
 
-    event BetPlaced(uint id, address player, uint amount, bool betOn);
-    event BetResult(uint id, bool flipResult, uint payout);
-    uint private betId = 0;
+    event BetPlaced(bytes32 id, address player, uint amount, bool betOn);
+    event BetResult(bytes32 id, bool flipResult, uint payout);
+
+    // constructor() public {
+    //     provable_setProof(proofType_Ledger);
+    //     flipCoin();
+    // }
 
     function getMyBalance() public view returns (uint) {
         return balances[msg.sender];
     }
 
-    function placeBet(bool betOn, uint amount) public returns (bool) {
+    function getBet(bytes32 id) public view returns (address player, bool betOn, uint amount) {
+        return (bets[id].player, bets[id].betOn, bets[id].amount);
+    }
+
+    function placeBet(bool betOn, uint amount) public {
         require(amount <= maxBet(), 'bet above max');
         require(amount <= balances[msg.sender], 'bet above balance');
         require(amount >= minBet(), 'bet below min');
-        bool result = flipCoin();
-        uint payoutAmt = payout(msg.sender, betOn, result, amount);
-        emit BetResult(++betId, result, payoutAmt);
-        return true;
+
+        // Get test queryId to store the bet before flipCoin() invokes the callback.
+        // When provableAPI is called can return queryId from flipCoin()
+        // as it won't be invoking the callback directly
+        // (and trying to access the bet info before it's recorded)
+        bytes32 queryId = getQueryId();
+        bets[queryId] = Bet(msg.sender, betOn, amount);
+        emit BetPlaced(queryId, msg.sender, amount, betOn);
+        flipCoin();
     }
 
     function minBet() public pure returns(uint) {
@@ -32,23 +52,38 @@ contract PlaceCoinFlipBet is Ownable {
         return balances[owner] / 100;
     }
 
-    function payout(address player, bool betOn, bool flipResult, uint betAmount) private returns(uint) {
-        if (betOn != flipResult) {
-            balances[player] -= betAmount;
-            balances[owner] += betAmount;
+    function __callback(bytes32 _queryId, string memory _result) public {
+        bool result = uint(keccak256(abi.encodePacked(_result))) % 2 == 0;
+        uint payoutAmt = payout(_queryId, result);
+        emit BetResult(_queryId, result, payoutAmt);
+    }
+
+    function payout(bytes32 queryId, bool flipResult) private returns(uint) {
+        Bet memory bet = bets[queryId];
+        if (bet.betOn != flipResult) {
+            balances[bet.player] -= bet.amount;
+            balances[owner] += bet.amount;
             return 0;
         }
 
-        uint winnings = betAmount * 2;
+        uint winnings = bet.amount * 2;
         balances[owner] -= winnings;
-        balances[player] += winnings;
+        balances[bet.player] += winnings;
 
         return winnings;
     }
 
     // tails = true, heads = false
-    function flipCoin() public view returns (bool) {
-        return (now % 2) == 0;
+    function flipCoin() public returns (bytes32) {
+        bytes32 queryId = getQueryId();
+        string memory random = now % 2 == 0 ? "0" : "1";
+        __callback(queryId, random);
+
+        return queryId;
+    }
+
+    function getQueryId() internal view returns (bytes32) {
+        return bytes32(keccak256(abi.encodePacked(msg.sender)));
     }
 
     function addFunds() external payable {

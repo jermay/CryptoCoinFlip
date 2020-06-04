@@ -6,6 +6,8 @@
     "start": "ng serve",
     "build": "ng build",
     "test": "ng test",
+    "testci": "ng test --no-watch --no-progress --browsers=ChromeHeadlessCI",
+    "testheadless": "ng test --browsers=ChromeHeadlessCI",
     "lint": "ng lint",
     "e2e": "ng e2e"
   },
@@ -19,6 +21,7 @@
     "@angular/platform-browser": "~8.2.14",
     "@angular/platform-browser-dynamic": "~8.2.14",
     "@angular/router": "~8.2.14",
+    "@truffle/contract": "^4.2.7",
     "bootstrap": "^4.4.1",
     "c": "^0.1.0",
     "dotenv": "^8.2.0",
