@@ -23,7 +23,8 @@ export class CoinFlipBetService {
     flipResult: false,
     payout: new BN('0')
   });
-  private betEventCounter = 0; // test
+  lastPlaceBetEventLogId: string;
+  lastBetResultEventLogId: string;
 
   constructor(private contractService: ContractService) {
     this.subscribtToEvents();
@@ -82,13 +83,15 @@ export class CoinFlipBetService {
   }
 
   onBetPlaced(error: any, event: any) {    
-    console.log('CoinFlipBetService > onBetPlaced ', ++this.betEventCounter, event);
+    console.log('CoinFlipBetService > onBetPlaced ', event);
     if (error) {
       console.error(error);
       return;
-    } else if (!event || !event.returnValues.id) {
+    } else if (!event || !event.returnValues.id || event.id === this.lastPlaceBetEventLogId) {
+      console.log('CoinFlipBetService > onBetPlaced: empty or duplicate event');
       return;
     }
+    this.lastPlaceBetEventLogId = event.id;
     const data: BetPlacedEvent = {
       id: event.returnValues.id,
       player: event.returnValues.player,
@@ -103,9 +106,11 @@ export class CoinFlipBetService {
     if (error) {
       console.error(error);
       return;
-    } else if (!event || !event.returnValues.id) {
+    } else if (!event || !event.returnValues.id || event.id === this.lastBetResultEventLogId) {
+      console.log('CoinFlipBetService > onBetResult: empty or duplicate event');
       return;
     }
+    this.lastBetResultEventLogId = event.id;
     const data: BetResultEvent = {
       id: event.returnValues.id,
       flipResult: event.returnValues.flipResult,
