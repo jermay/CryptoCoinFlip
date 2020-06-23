@@ -1,8 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-import BN from 'bn.js';
-import Web3 from 'web3';
 
 import { CoinFlipBetService } from '../coin-flip-bet.service';
+import { Web3Service } from '../web3.service';
 
 
 @Component({
@@ -12,9 +11,7 @@ import { CoinFlipBetService } from '../coin-flip-bet.service';
 })
 export class WalletComponent implements OnInit {
 
-  readonly web3 = new Web3(Web3.givenProvider);
-
-  constructor(private service: CoinFlipBetService) { }
+  constructor(private service: CoinFlipBetService, private web3: Web3Service) { }
 
   ngOnInit() {
     this.service.getBalance();

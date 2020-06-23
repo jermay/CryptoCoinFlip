@@ -17,7 +17,6 @@ contract PlaceCoinFlipBet is Ownable, usingProvable {
     event BetResult(bytes32 id, bool flipResult, uint payout);
 
     // constructor() public {
-    //     provable_setProof(proofType_Ledger);
     //     flipCoin();
     // }
 
@@ -34,14 +33,9 @@ contract PlaceCoinFlipBet is Ownable, usingProvable {
         require(amount <= balances[msg.sender], 'bet above balance');
         require(amount >= minBet(), 'bet below min');
 
-        // Get test queryId to store the bet before flipCoin() invokes the callback.
-        // When provableAPI is called can return queryId from flipCoin()
-        // as it won't be invoking the callback directly
-        // (and trying to access the bet info before it's recorded)
-        bytes32 queryId = getQueryId();
+        bytes32 queryId = flipCoin();
         bets[queryId] = Bet(msg.sender, betOn, amount);
         emit BetPlaced(queryId, msg.sender, amount, betOn);
-        flipCoin();
     }
 
     function minBet() public pure returns(uint) {
@@ -75,15 +69,7 @@ contract PlaceCoinFlipBet is Ownable, usingProvable {
 
     // tails = true, heads = false
     function flipCoin() public returns (bytes32) {
-        bytes32 queryId = getQueryId();
-        string memory random = now % 2 == 0 ? "0" : "1";
-        __callback(queryId, random);
-
-        return queryId;
-    }
-
-    function getQueryId() internal view returns (bytes32) {
-        return bytes32(keccak256(abi.encodePacked(msg.sender)));
+        return provable_newRandomDSQuery(0, 1, 200000);
     }
 
     function addFunds() external payable {

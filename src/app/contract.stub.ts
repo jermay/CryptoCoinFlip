@@ -57,35 +57,45 @@ export class ContractStub implements Contract {
 
     placeBet(betOn: boolean, amount: BN): any {
         this.nextBetId++;
+        const testBetPlacedEvent = {
+            id: this.nextBetId.toString(),
+            returnValues: {
+                id: this.nextBetId.toString(),
+                player: 'testplayer',
+                amount: amount,
+                betOn: betOn
+            }
+        };
+        const testBetResultEvent = {
+            id: this.nextBetId.toString(),
+            returnValues: {
+                id: this.nextBetId.toString(),
+                flipResult: this.nextBetResult,
+                payout: betOn == this.nextBetResult ? amount.mul(new BN('2')) : new BN('0')
+            }
+        };
         this.emitTestBetPlacedEvent(
             this.nextBetRusultError,
-            {
-                returnValues: {
-                    id: this.nextBetId.toString(),
-                    player: 'testplayer',
-                    amount: amount,
-                    betOn: betOn
-                }
-            }
+            testBetPlacedEvent  
         );
         this.emitTestBetResultEvent(
             this.nextBetRusultError,
-            {
-                returnValues: {
-                    id: this.nextBetId.toString(),
-                    flipResult: this.nextBetResult,
-                    payout: betOn == this.nextBetResult ? amount.mul(new BN('2')) : new BN('0')
-                }
-            }
+            testBetPlacedEvent
         );
 
-        return this.createTxObj(true);
+        const response = {
+            events: {
+                BetPlaced: testBetPlacedEvent,
+                BetResult: testBetResultEvent
+            }
+        };
+        return this.createTxObj(response);
     };
 
     createTxObj(value: any): any {
         return {
-            send: (options: SendOptions) => Promise.resolve(value),
-            call: (options: SendOptions) => Promise.resolve(value),
+            send: (options?: SendOptions) => Promise.resolve(value),
+            call: (options?: SendOptions) => Promise.resolve(value),
         }
     }
 
@@ -105,25 +115,68 @@ export class ContractStub implements Contract {
     ): void { }
 
     events = {
-        BetPlaced: (filter, callback) => this.betPlacedEventSubs.push(callback),
-        BetResult: (filter, callback) => this.betResultEventSubs.push(callback),
+        BetPlaced: (filter, callback) => {
+            if (callback) {
+            this.betPlacedEventSubs.push(callback);
+            }
+            return this.createEventObj(this.betPlacedEventEmitterSubs);
+        },
+        BetResult: (filter, callback) => {
+            if (callback) {
+                this.betResultEventSubs.push(callback);
+            }
+            return this.createEventObj(this.betResultEventEmitterSubs);
+        },
     };
     betPlacedEventSubs = [];
+    betPlacedEventEmitterSubs = [];
     betResultEventSubs = [];
+    betResultEventEmitterSubs = [];
+
+    createEventObj(subList: any[]) {
+        return {
+            on: (eventType: string, callback: any) => {
+                subList.push({ eventType: eventType, callback: callback });
+            }
+        };
+    }
 
     emitTestBetPlacedEvent(error: any, data: any) {
         this.betPlacedEventSubs.forEach(callback => callback(error, data));
+        this.betPlacedEventEmitterSubs.forEach(sub => {
+            if (error && sub.eventType == 'error') {
+                sub.callback(error);
+            } else {
+                sub.callback(data);
+            }
+        });
     }
 
     emitTestBetResultEvent(error: any, data: any) {
         this.betResultEventSubs.forEach(callback => callback(error, data));
+        this.betResultEventEmitterSubs.forEach(sub => {
+            if (error && sub.eventType == 'error') {
+                sub.callback(error);
+            } else {
+                sub.callback(data);
+            }
+        });
     }
+
+    pastEvents = {
+        BetPlaced: [],
+        BetResult: [],
+    };
 
     getPastEvents(
         event: string,
-        options: PastEventOptions,
-        callback: (error: Error, event: EventData) => void
+        options?: PastEventOptions,
+        callback?: (error: Error, event: EventData) => void
     ): Promise<EventData[]> {
-        return Promise.resolve(undefined);
+        let events = this.pastEvents[event];
+        if (callback) {
+            callback(undefined, events);
+        }
+        return Promise.resolve(events);
     }
 }

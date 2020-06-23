@@ -1,6 +1,7 @@
-import Web3 from 'web3';
 import { Component, OnInit, Input } from '@angular/core';
-import { BetResultEvent } from '../bet-result-event';
+
+import { Web3Service } from '../web3.service';
+import { Bet, BetStatus } from '../bet';
 
 @Component({
   selector: 'app-bet-event',
@@ -9,13 +10,13 @@ import { BetResultEvent } from '../bet-result-event';
 })
 export class BetEventComponent implements OnInit {
 
-  @Input("betResult") betResult: BetResultEvent;
+  @Input("bet") bet: Bet;  
+  readonly BetStatus = BetStatus; //enum proxy
 
-  readonly web3 = new Web3(Web3.givenProvider);
-
-  constructor() { }
+  constructor(private web3: Web3Service) { }
 
   ngOnInit() {
+    // console.log('BetEventComponent: bet: ', this.bet);
   }
 
 }

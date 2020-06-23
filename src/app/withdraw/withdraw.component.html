@@ -8,7 +8,7 @@
                 </div>
             </div>
             <button type="button" class="btn btn-primary" (click)="withdraw()">Withdraw</button>
-            <button type="button" class="btn btn-primary ml-1" (click)="withdrawMax()">Withdraw All ({{web3.utils.fromWei(service.balance)}})</button>
+            <button type="button" class="btn btn-primary ml-1" (click)="withdrawMax()">Withdraw All ({{web3.instance.utils.fromWei(service.balance)}})</button>
         </div>
     </form>
 </div>

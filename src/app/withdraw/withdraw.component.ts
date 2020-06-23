@@ -1,11 +1,10 @@
 import BN from 'bn.js';
-import Web3 from 'web3';
-const web3 = new Web3(Web3.givenProvider);
 
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
 
 import { CoinFlipBetService } from '../coin-flip-bet.service';
+import { Web3Service } from '../web3.service';
 
 @Component({
   selector: 'app-withdraw',
@@ -14,10 +13,9 @@ import { CoinFlipBetService } from '../coin-flip-bet.service';
 })
 export class WithdrawComponent implements OnInit {
 
-  readonly web3 = new Web3(Web3.givenProvider);
   withdrawForm: FormGroup;
   
-  constructor(private service: CoinFlipBetService, private fb: FormBuilder) { }
+  constructor(private service: CoinFlipBetService, private web3: Web3Service, private fb: FormBuilder) { }
 
   ngOnInit() {
     this.withdrawForm = this.fb.group({
@@ -32,7 +30,7 @@ export class WithdrawComponent implements OnInit {
   
   withdraw() {
     const ethAmount = this.withdrawForm.value.amount.toString();
-    const weiAmount = web3.utils.toWei(ethAmount, 'ether');
+    const weiAmount = this.web3.instance.utils.toWei(ethAmount, 'ether');
     console.log(this.withdrawForm.value);
     console.log(`Withdraw: ${ethAmount} ETH (${weiAmount})`);
 

@@ -2,12 +2,12 @@
     <div class="form-group" [formGroup]="betForm">
         <h4>Place Your Bet</h4>
         <div class="form-group row">
-            <label class="col-form-label col-sm-3">Balance: {{web3.utils.fromWei(service.balance)}} ETH</label>            
+            <label class="col-form-label col-sm-3">Balance: {{web3.instance.utils.fromWei(service.balance)}} ETH</label>            
         </div>        
         <div class="form-group row">
-            <label class="col-form-label col-sm-3">Bet (Min: {{web3.utils.fromWei(minBet)}} Max: {{web3.utils.fromWei(maxBet)}})</label>
+            <label class="col-form-label col-sm-3">Bet (Min: {{web3.instance.utils.fromWei(minBet)}} Max: {{web3.instance.utils.fromWei(maxBet)}})</label>
             <div class="col-sm-2">
-                <input type="range" class="form-control" formControlName="betAmount" placeholder="Bet Amount" [min]="web3.utils.fromWei(minBet)" [max]="web3.utils.fromWei(maxBet)" step="0.001" value="0.001">
+                <input type="range" class="form-control" formControlName="betAmount" placeholder="Bet Amount" [min]="web3.instance.utils.fromWei(minBet)" [max]="web3.instance.utils.fromWei(maxBet)" step="0.001" value="0.001">
             </div>        
             <label class="col-form-label col-sm-2">{{betForm.value.betAmount}} ETH</label>
             <div class="form-group col-sm-2">
@@ -18,13 +18,17 @@
             </div>
         </div>
         <div class="form-group row">
-            <div class="col-sm-4">
-                <button type="button" class="btn btn-primary" (click)="placeBet()" [disabled]="service.balance == 0">Flip Coin!</button>
+            <div class="col-sm-6">
+                <button type="button" class="btn btn-primary" (click)="placeBet()" [disabled]="service.balance == 0 || waitingForBetResults">
+                    <span *ngIf="waitingForBetResults" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    Flip Coin!
+                </button>
                 <a class="btn btn-success ml-2" routerLink="wallet" routerLinkActive="active">Deposit/Withdrawl</a>
                 <p *ngIf="service.balance == 0" class="text-danger">Deposit some ETH to get started!</p>
             </div>
         </div>
     </div>
-    <div id="message">{{message}}</div>    
-    <app-bet-event *ngFor="let r of betResults" [betResult]="r"></app-bet-event>
+    <div id="message">{{message}}</div>
+    <div>Found {{service.betList.bets.length}} bets</div>
+    <app-bet-event *ngFor="let bet of service.betList.bets" [bet]="bet"></app-bet-event>
 </div>

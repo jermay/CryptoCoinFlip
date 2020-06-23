@@ -1,28 +1,61 @@
-<div *ngIf="betResult.payout > 0" class="card text-white bg-success">
-    <div class="row">
-        <div class="col-md-4">
-            <img src="https://thumbs.dreamstime.com/t/money-pile-17968716.jpg" class="card-img" alt="YouWin"/>
-        </div>        
-        <div class="col-md-8">
-            <div class="card-body">
-                <h5 class="card-title">You Win!</h5>
+<!-- unconfirmed -->
+<ng-container *ngIf="bet.status() == BetStatus.Unconfirmed">
+    <div class="card text-white bg-secondary">
+        <div class="card-body">
+            <h5 class="card-title">New Bet</h5>             
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            <span>#{{bet.id()}} Waiting for confirmation...</span>
+        </div>
+    </div>
+</ng-container>
+
+<!-- confirmed awaiting result -->
+<ng-container *ngIf="bet.status() == BetStatus.ConfirmedAndWaitingForResult">
+    <div class="card text-white bg-secondary">
+        <div class="card-body">            
+            <div class="row">
+                <div class="col-md-4">
+                    <img src="https://acegif.com/wp-content/gifs/coin-flip-38.gif" class="card-img" alt="Spinning Coin"/>
+                </div>                
+                <div class="col-md-8">
+                    <h5 class="card-title">Confirmed!</h5>
+                    <p class="card-text">Waiting for flip result...</p>
+                    <p class="card-text"><small>#{{bet.id()}}, #{{bet.eventId()}}</small></p>
+                </div>
             </div>
-            <p class="card-text">Result: {{betResult.flipResult ? "Heads" : "Tails"}} {{"YOU WIN! +" + web3.utils.fromWei(betResult.payout) + " ETH"}}</p>
-            <p class="card-text"><small>#{{betResult.id}}</small></p>
         </div>
-    </div>    
-</div>
-<div *ngIf="betResult.payout == 0" class="card text-white bg-secondary">
-    <div class="row">
-        <div class="col-md-4">
-            <img src="http://clipartmag.com/images/empty-pockets-clipart-5.jpg" class="card-img" alt="TryAgin"/>
-        </div>
-        <div class="col-md-8">
-            <div class="card-body">                
-                <h5 class="card-title">Try Again</h5>
+    </div>
+</ng-container>
+
+<!-- completed -->
+<ng-container *ngIf="bet.status() == BetStatus.Completed">
+    <div *ngIf="bet.isWinner()" class="card text-white bg-success">
+        <div class="card-body row">
+            <div class="col-md-4">
+                <img src="https://thumbs.dreamstime.com/t/money-pile-17968716.jpg" class="card-img" alt="YouWin"/>
+            </div>        
+            <div class="col-md-8">
+                <div class="card-body">
+                    <h5 class="card-title">You Win!</h5>                
+                    <p class="card-text">Result: {{bet.flipResult().toString()}}</p>
+                    <p class="card-text">{{"You won +" + web3.instance.utils.fromWei(bet.payout()) + " ETH!"}}</p>
+                    <p class="card-text"><small>#{{bet.id()}}, #{{bet.eventId()}}</small></p>
+                </div>
             </div>
-            <p class="card-text">Result: {{betResult.flipResult ? "Heads" : "Tails"}}</p>
-            <p class="card-text"><small>#{{betResult.id}}</small></p>
-        </div>
-    </div>    
-</div>
+        </div>    
+    </div>
+    <div *ngIf="!bet.isWinner()" class="card text-white bg-secondary">
+        <div class="card-body row">
+            <div class="col-md-4">
+                <img src="http://clipartmag.com/images/empty-pockets-clipart-5.jpg" class="card-img" alt="TryAgin"/>
+            </div>
+            <div class="col-md-8">
+                <div class="card-body">                
+                    <h5 class="card-title">Try Again</h5>
+                    <p class="card-text">Result: {{bet.flipResult().toString()}}</p>
+                    <p class="card-text"><small>#{{bet.id()}}, #{{bet.eventId()}}</small></p>
+                </div>
+            </div>
+        </div>    
+    </div>
+</ng-container>
