@@ -55,9 +55,9 @@ module.exports = {
       host: "127.0.0.1",
       port: 7545,
       network_id: "*",
-      gas: 8e6,
-      gasPrice: 20e9,
-      websockets: true
+      // gas: 8e6,
+      // gasPrice: 20e9,
+      // websockets: true
 	  },
 
     // Another network with more advanced options...

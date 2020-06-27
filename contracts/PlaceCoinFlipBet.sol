@@ -1,8 +1,11 @@
 pragma solidity 0.5.12;
-import './provableAPI.sol';
-import './Ownable.sol';
+import "./provableAPI.sol";
+import "./Ownable.sol";
+import "./SafeMath.sol";
 
 contract PlaceCoinFlipBet is Ownable, usingProvable {
+
+    using SafeMath for uint;
 
     struct Bet {
         address player;
@@ -13,8 +16,8 @@ contract PlaceCoinFlipBet is Ownable, usingProvable {
     mapping(address => uint) balances;
     mapping(bytes32 => Bet) bets; // queryId => Bet
 
-    event BetPlaced(bytes32 id, address player, uint amount, bool betOn);
-    event BetResult(bytes32 id, bool flipResult, uint payout);
+    event BetPlaced(bytes32 indexed id, address indexed player, uint amount, bool betOn);
+    event BetResult(bytes32 indexed id, address indexed player, bool flipResult, uint payout);
 
     // constructor() public {
     //     flipCoin();
@@ -30,7 +33,7 @@ contract PlaceCoinFlipBet is Ownable, usingProvable {
 
     function placeBet(bool betOn, uint amount) public {
         require(amount <= maxBet(), 'bet above max');
-        require(amount <= balances[msg.sender], 'bet above balance');
+        require(balances[msg.sender] >= amount.add(getOracleCost()), 'insufficient funds');
         require(amount >= minBet(), 'bet below min');
 
         bytes32 queryId = flipCoin();
@@ -48,23 +51,34 @@ contract PlaceCoinFlipBet is Ownable, usingProvable {
 
     function __callback(bytes32 _queryId, string memory _result) public {
         bool result = uint(keccak256(abi.encodePacked(_result))) % 2 == 0;
-        uint payoutAmt = payout(_queryId, result);
-        emit BetResult(_queryId, result, payoutAmt);
+        Bet memory bet = bets[_queryId];
+        uint payoutAmt = payout(bet, result);
+        emit BetResult(_queryId, bet.player, result, payoutAmt);
     }
 
-    function payout(bytes32 queryId, bool flipResult) private returns(uint) {
-        Bet memory bet = bets[queryId];
+    function payout(Bet memory bet, bool flipResult) private returns(uint) {
         if (bet.betOn != flipResult) {
-            balances[bet.player] -= bet.amount;
-            balances[owner] += bet.amount;
+            balances[bet.player] = balances[bet.player]
+                .sub(bet.amount)
+                .sub(getOracleCost());
+            balances[owner] = balances[owner]
+                .add(bet.amount);
             return 0;
         }
 
-        uint winnings = bet.amount * 2;
-        balances[owner] -= winnings;
-        balances[bet.player] += winnings;
+        uint grossWinnings = bet.amount.mul(2);
+        uint netWinnings = grossWinnings
+            .sub(getOracleCost());
+        balances[owner] = balances[owner]
+            .sub(grossWinnings);
+        balances[bet.player] = balances[bet.player]
+            .add(netWinnings);
 
-        return winnings;
+        return netWinnings;
+    }
+
+    function getOracleCost() internal returns(uint) {
+        return provable_getPrice("RANDOM");
     }
 
     // tails = true, heads = false
@@ -73,17 +87,20 @@ contract PlaceCoinFlipBet is Ownable, usingProvable {
     }
 
     function addFunds() external payable {
-        balances[msg.sender] += msg.value;
+        balances[msg.sender] = balances[msg.sender]
+            .add(msg.value);
     }
 
     function withdrawFunds(uint amount) external {
         require(amount <= balances[msg.sender], 'withdraw exceeds balance');
-        balances[msg.sender] -= amount;
+        balances[msg.sender] = balances[msg.sender]
+            .sub(amount);
         msg.sender.transfer(amount);
     }
 
     function () external payable {
-        balances[owner] += msg.value;
+        balances[owner] = balances[owner]
+            .add(msg.value);
     }
 
     function destroy() external onlyOwner {
