@@ -39,6 +39,13 @@ export class Bet {
         return this._betPlacedEvent != undefined;
     }
 
+    player(): string {
+        if (this.isConfirmed()) {
+            return this._betPlacedEvent.player;
+        }
+        return undefined;
+    }
+
     on(): HeadsOrTails {
         if (this.isConfirmed()) {
             return this._betOn

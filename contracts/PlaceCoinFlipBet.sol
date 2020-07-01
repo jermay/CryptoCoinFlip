@@ -92,7 +92,8 @@ contract PlaceCoinFlipBet is Ownable, usingProvable {
     }
 
     function withdrawFunds(uint amount) external {
-        require(amount <= balances[msg.sender], 'withdraw exceeds balance');
+        require(amount <= address(this).balance, 'exceeds contract balance');
+        require(amount <= balances[msg.sender], 'exceeds player balance');
         balances[msg.sender] = balances[msg.sender]
             .sub(amount);
         msg.sender.transfer(amount);

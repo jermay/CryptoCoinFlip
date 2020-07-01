@@ -13,21 +13,22 @@ import { Web3Service } from '../web3.service';
 })
 export class WithdrawComponent implements OnInit {
 
+  isOwner: boolean = false;
   withdrawForm: FormGroup;
-  
+
   constructor(private service: CoinFlipBetService, private web3: Web3Service, private fb: FormBuilder) { }
 
   ngOnInit() {
     this.withdrawForm = this.fb.group({
       amount: ['']
     });
-    this.service.getBalance()
+    this.service.getBalance();
   }
 
   withdrawMax() {
     this.service.withdraw(this.service.balance);
   }
-  
+
   withdraw() {
     const ethAmount = this.withdrawForm.value.amount.toString();
     const weiAmount = this.web3.instance.utils.toWei(ethAmount, 'ether');
@@ -35,7 +36,7 @@ export class WithdrawComponent implements OnInit {
     console.log(`Withdraw: ${ethAmount} ETH (${weiAmount})`);
 
     this.service.withdraw(weiAmount)
-      .then(() => this.withdrawForm.setValue({amount: ''}));
+      .then(() => this.withdrawForm.setValue({ amount: '' }));
   }
 
 }

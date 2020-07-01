@@ -2,7 +2,7 @@
     <div class="form-group" [formGroup]="betForm">
         <h4>Place Your Bet</h4>
         <div class="form-group row">
-            <label class="col-form-label col-sm-3">Balance: {{web3.instance.utils.fromWei(service.balance)}} ETH</label>            
+            <label class="col-form-label col-sm-3">Balance ({{network}}): {{web3.instance.utils.fromWei(service.balance)}} ETH</label>            
         </div>        
         <div class="form-group row">
             <label class="col-form-label col-sm-3">Bet (Min: {{web3.instance.utils.fromWei(minBet)}} Max: {{web3.instance.utils.fromWei(maxBet)}})</label>
@@ -12,8 +12,8 @@
             <label class="col-form-label col-sm-2">{{betForm.value.betAmount}} ETH</label>
             <div class="form-group col-sm-2">
                 <select class="form-control" formControlName="betOn">
-                    <option value="false">Heads</option>
-                    <option value="true">Tails</option>
+                    <option value="false">Heads</option><!-- false == 0 == heads-->
+                    <option value="true">Tails</option><!-- true == 1 == tails -->
                 </select>
             </div>
         </div>

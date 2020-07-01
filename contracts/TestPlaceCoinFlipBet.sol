@@ -21,4 +21,8 @@ contract TestPlaceCoinFlipBet is PlaceCoinFlipBet {
     function setOracleCost(uint amount) public {
         _oracleFee = amount;
     }
+
+    function setOwnerBalance(uint amount) public {
+        balances[owner] = amount;
+    }
 }

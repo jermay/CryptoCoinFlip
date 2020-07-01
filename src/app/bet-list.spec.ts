@@ -76,6 +76,7 @@ describe('BetList', () => {
       };
       betResultEvent = {
         id: betPlacedEvent.id,
+        player: 'test',
         flipResult: true,
         payout: new BN('2')
       }
@@ -136,11 +137,13 @@ describe('BetList', () => {
         BetResult: [
           {
             id: '1a2c3b',
+            player: 'test',
             flipResult: true, // winning
             payout: new BN('2')
           },
           {
             id: '2a3c4b',
+            player: 'test',
             flipResult: true, // losing
             payout: new BN('0')
           }
@@ -148,21 +151,36 @@ describe('BetList', () => {
       };
     });
 
-    it('should add bets for all BetPlaced events', ()=>{
+    it('should add bets for all BetPlaced events', () => {
       betList.addHistory(pastEvents);
       expect(betList.bets.length).toEqual(3, 'add bets');
     });
 
-    it('should complete all bets with BetResult events', ()=>{
+    it('should complete all bets with BetResult events', () => {
       betList.addHistory(pastEvents);
 
       // new bets added to the front
-      expect(betList.bets[0].status()).toEqual(BetStatus.ConfirmedAndWaitingForResult,'confirmed');
+      expect(betList.bets[0].status()).toEqual(BetStatus.ConfirmedAndWaitingForResult, 'confirmed');
       expect(betList.bets[1].status()).toEqual(BetStatus.Completed, 'complete');
       expect(betList.bets[2].status()).toEqual(BetStatus.Completed, 'complete');
     });
 
     // what about the time stamps for past events? Only have block numbers.
+  });
+
+  describe('remove', () => {
+    let bet: Bet;
+    beforeEach(() => {
+      bet = new Bet();
+      betList.bets.push(bet);
+    });
+
+    it('should remove the bet', () => {
+      const result = betList.remove(bet.id());
+      expect(result).toEqual(true, 'return value');
+      expect(betList.bets.length).toEqual(0, 'removed');
+    });
+
   });
 
 });

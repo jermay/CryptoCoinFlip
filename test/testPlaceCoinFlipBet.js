@@ -357,5 +357,15 @@ contract('PlaceCoinFlipBet', async function (accounts) {
                 truffleAssert.ErrorType.REVERT
             );
         });
+
+        it.only('should REVERT if the requsted amount is greater than the contract balance', async function() {
+            const wayTooMuch = contractInitAmount.clone().mul(new BN('2'));
+            await contractInstance.setOwnerBalance(wayTooMuch);
+
+            await truffleAssert.fails(
+                contractInstance.withdrawFunds(wayTooMuch, { from: accounts[0] }),
+                truffleAssert.ErrorType.REVERT
+            );
+        });
     });
 });

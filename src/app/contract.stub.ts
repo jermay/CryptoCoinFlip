@@ -6,6 +6,9 @@ import { Contract } from './contract';
 
 export class ContractStub implements Contract {
 
+    // set _error to a value to make transaction fail
+    _error: any = undefined;
+
     _minBet = new BN('10000000000000000');
     balances = {
         player: new BN('0'),
@@ -15,6 +18,7 @@ export class ContractStub implements Contract {
     nextBetResult = false;
     nextBetRusultError: any = undefined;
     nextBetId = 0;
+    _owner: string;
 
     constructor() { }
 
@@ -57,30 +61,38 @@ export class ContractStub implements Contract {
 
     placeBet(betOn: boolean, amount: BN): any {
         this.nextBetId++;
+        const playerAddress = 'testplayer';
         const testBetPlacedEvent = {
             id: this.nextBetId.toString(),
+            event: 'BetPlaced',
+            blockNumber: 1,
             returnValues: {
                 id: this.nextBetId.toString(),
-                player: 'testplayer',
+                player: playerAddress,
                 amount: amount,
                 betOn: betOn
             }
         };
         const testBetResultEvent = {
             id: this.nextBetId.toString(),
+            event: 'BetResult',
+            blockNumber: 2,
             returnValues: {
                 id: this.nextBetId.toString(),
+                player: playerAddress,
                 flipResult: this.nextBetResult,
                 payout: betOn == this.nextBetResult ? amount.mul(new BN('2')) : new BN('0')
             }
         };
-        this.emitTestBetPlacedEvent(
-            this.nextBetRusultError,
-            testBetPlacedEvent  
-        );
-        this.emitTestBetResultEvent(
+        this.emitEvent(
+            'BetPlaced',
             this.nextBetRusultError,
             testBetPlacedEvent
+        );
+        this.emitEvent(
+            'BetResult',
+            this.nextBetRusultError,
+            testBetResultEvent
         );
 
         const response = {
@@ -92,20 +104,39 @@ export class ContractStub implements Contract {
         return this.createTxObj(response);
     };
 
+    owner(): Promise<string> {
+        return this.createTxObj(this._owner);
+    }
+
+    destroy(): Promise<any> {
+        return this.createTxObj('kaboom!');
+    }
+
     createTxObj(value: any): any {
-        return {
-            send: (options?: SendOptions) => Promise.resolve(value),
-            call: (options?: SendOptions) => Promise.resolve(value),
+        let txObj: any;
+        if (this._error) {
+            txObj = {
+                send: (options?: SendOptions) => Promise.reject(this._error),
+                call: (options?: SendOptions) => Promise.reject(this._error),
+            }
+        } else {
+            txObj = {
+                send: (options?: SendOptions) => Promise.resolve(value),
+                call: (options?: SendOptions) => Promise.resolve(value),
+            }
         }
+        return txObj;
     }
 
     methods = {
+        owner: this.owner.bind(this),
         deposit: this.deposit.bind(this),
         withdraw: this.withdraw.bind(this),
         getMyBalance: this.getMyBalance.bind(this),
         minBet: this.minBet.bind(this),
         maxBet: this.maxBet.bind(this),
         placeBet: this.placeBet.bind(this),
+        destroy: this.destroy.bind(this),
     };
 
     once(
@@ -115,68 +146,116 @@ export class ContractStub implements Contract {
     ): void { }
 
     events = {
-        BetPlaced: (filter, callback) => {
+        BetPlaced: (
+            options: EventOptions,
+            callback: (error: Error, event: EventData) => void
+        ) => {
             if (callback) {
-            this.betPlacedEventSubs.push(callback);
+                this.eventSubs.push({
+                    event: 'BetPlaced',
+                    type: 'direct',
+                    options: options,
+                    callback: callback
+                });
             }
-            return this.createEventObj(this.betPlacedEventEmitterSubs);
+            return this.createEventObj(this.eventSubs, 'BetPlaced', options);
         },
-        BetResult: (filter, callback) => {
+        BetResult: (
+            options: EventOptions,
+            callback: (error: Error, event: EventData) => void
+        ) => {
             if (callback) {
-                this.betResultEventSubs.push(callback);
+                this.eventSubs.push({
+                    event: 'BetResult',
+                    type: 'direct',
+                    options: options,
+                    callback: callback
+                });
             }
-            return this.createEventObj(this.betResultEventEmitterSubs);
+            return this.createEventObj(this.eventSubs, 'BetResult', options);
         },
     };
-    betPlacedEventSubs = [];
-    betPlacedEventEmitterSubs = [];
-    betResultEventSubs = [];
-    betResultEventEmitterSubs = [];
 
-    createEventObj(subList: any[]) {
+    eventSubs: EventSub[] = [];
+
+    createEventObj(subList: any[], event: string, options: EventOptions) {
         return {
             on: (eventType: string, callback: any) => {
-                subList.push({ eventType: eventType, callback: callback });
+                subList.push({ event: event, type: eventType, options: options, callback: callback });
             }
         };
     }
 
-    emitTestBetPlacedEvent(error: any, data: any) {
-        this.betPlacedEventSubs.forEach(callback => callback(error, data));
-        this.betPlacedEventEmitterSubs.forEach(sub => {
-            if (error && sub.eventType == 'error') {
-                sub.callback(error);
-            } else {
-                sub.callback(data);
-            }
-        });
+    emitEvent(name: string, error: any, data: any) {
+        this.eventSubs
+            .filter(sub => sub.event === name)
+            .filter(sub => this.filterEvent(name, sub.options, data))
+            .forEach(sub => {
+                switch (sub.type) {
+                    case 'direct':
+                        sub.callback(error, data);
+                        break;
+                    case 'data':
+                        if (!error) sub.callback(data);
+                        break;
+                    case 'error':
+                        sub.callback(error);
+                        break;
+
+                    default:
+                        throw new Error('unknown sub event type');
+                }
+            });
     }
 
-    emitTestBetResultEvent(error: any, data: any) {
-        this.betResultEventSubs.forEach(callback => callback(error, data));
-        this.betResultEventEmitterSubs.forEach(sub => {
-            if (error && sub.eventType == 'error') {
-                sub.callback(error);
-            } else {
-                sub.callback(data);
+    filterEvent(name: string, options: EventOptions, event: any): boolean {
+        if (name != event.event) {
+            // console.log('filter event: name failed');
+            return false;
+        }
+        if (!options || !options.filter || !event.returnValues) {
+            return true;
+        }
+        for (let key in options.filter) {
+            // console.log('filter key: ', key, 'filter value: ', options.filter[key], 'event value', event[key], 'event', event);
+            if (key == 'fromBlock') {
+                if (event.blockNumber < options.filter.fromBlock) {
+                    // console.log('filter event: fromBlock failed');
+                    return false;
+                }
+            } else if (key === 'toBlock') {
+                if (options.filter.toBlock !== 'latest'
+                    && options.filter.toBlock < event.blockNumber) {
+                    // console.log('filter event: toBlock failed');
+                    return false;
+                }
+            } else if (event.returnValues[key] != options.filter[key]) {
+                // console.log(`filter event: key ${key} failed`);
+                return false;
             }
-        });
+        }
+        return true;
     }
 
-    pastEvents = {
-        BetPlaced: [],
-        BetResult: [],
-    };
+    pastEvents: any = [];
 
     getPastEvents(
         event: string,
         options?: PastEventOptions,
         callback?: (error: Error, event: EventData) => void
     ): Promise<EventData[]> {
-        let events = this.pastEvents[event];
+        let events = this.pastEvents
+            .filter(e => this.filterEvent(event, options, e));
         if (callback) {
             callback(undefined, events);
         }
         return Promise.resolve(events);
     }
 }
+
+interface EventSub {
+    event: string
+    type: string
+    options: EventOptions
+    callback: any
+};

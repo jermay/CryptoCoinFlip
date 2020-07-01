@@ -1,8 +1,15 @@
 <div class="p-2">
     <h4>Wallet</h4>
-    <p>Balance: {{web3.instance.utils.fromWei(service.balance)}} ETH</p>
+    <p *ngIf="service.isPlayerOwner">Contract Balance ({{network}}): {{web3.instance.utils.fromWei(service.contractBalance)}} ETH</p>
+    <p><span *ngIf="service.isPlayerOwner">Owner </span> Balance ({{network}}): {{web3.instance.utils.fromWei(service.balance)}} ETH</p>
+    <div class="form-inline m-2" *ngIf="service.isPlayerOwner">
+        <label>Destroy Contract</label>
+        <input type="text" class="form-control ml-2" [formControl]="txtDestroy" placeholder="confirmation code"> 
+        <button type="button" class="btn btn-danger ml-2" (click)="onDestroy()">Destroy</button>
+    </div>
     <a class="btn btn-primary" routerLink="deposit" routerLinkActive="active">Deposit</a>
     <a class="btn btn-primary ml-2" routerLink="withdraw" routerLinkActive="active">Withdraw</a>
     <a class="btn btn-secondary ml-2" routerLink="" routerLinkActive="active">Go Back</a>
+
     <router-outlet></router-outlet>
 </div>

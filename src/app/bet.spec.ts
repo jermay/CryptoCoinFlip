@@ -69,6 +69,7 @@ describe('Bet', () => {
     beforeEach(() => {
       expectedBetResultEvent = {
         id: expectedBetPlacedEvent.id,
+        player: 'test',
         flipResult: true,
         payout: expectedBetPlacedEvent.amount.clone().mul(new BN('2'))
       }
@@ -105,6 +106,7 @@ describe('Bet', () => {
       beforeEach(() => {
         expectedBetResultEvent = {
           id: expectedBetPlacedEvent.id,
+          player: 'test',
           flipResult: false,
           payout: new BN('0')
         }

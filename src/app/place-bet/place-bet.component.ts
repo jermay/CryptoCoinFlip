@@ -17,6 +17,7 @@ export class PlaceBetComponent implements OnInit {
   message = "";
   minBet = new BN('0');
   maxBet = new BN('0');
+  network = 'Local';
 
   constructor(private service: CoinFlipBetService, private web3: Web3Service, private fb: FormBuilder) { }
 
@@ -28,6 +29,8 @@ export class PlaceBetComponent implements OnInit {
       betAmount: ['0.001']
     });
     this.service.minBet().then(b => this.minBet = b);
+    this.web3.instance.eth.net
+      .getNetworkType().then(network => this.network = network);
   }
 
   async updateMaxBet() {

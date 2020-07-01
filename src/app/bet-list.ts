@@ -38,11 +38,11 @@ export class BetList {
         return true;
     }
 
-    findBetById(id: number) {
+    findBetById(id: number): Bet {
         return this.bets.find(b => b.id() === id);
     }
 
-    findBetByEventId(id: string) {
+    findBetByEventId(id: string): Bet {
         return this.bets.find(b => b.eventId() === id);
     }
 
@@ -54,5 +54,13 @@ export class BetList {
         eventData.BetResult.forEach(betResultEvent => {
             this.addResult(betResultEvent);
         });
+    }
+
+    remove(id: number): boolean {
+        let i = this.bets.findIndex(bet => bet.id() === id);
+        if (i >= 0) {
+            this.bets.splice(i, 1);
+        }
+        return true;
     }
 }
