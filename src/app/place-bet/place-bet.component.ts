@@ -44,10 +44,10 @@ export class PlaceBetComponent implements OnInit {
   placeBet() {
     this.message = '';
     let vals = {
-      betOn: this.betForm.value.betOn,
-      amount: this.web3.instance.utils.toWei(this.betForm.value.betAmount.toString(), 'ether')
+      betOn: (this.betForm.value.betOn === "true"),
+      amount: new BN(this.web3.instance.utils.toWei(this.betForm.value.betAmount.toString(), 'ether'))
     };
-    console.log(`Place Bet clicked. betOn: ${vals.betOn}, amount: ${this.web3.instance.utils.fromWei(vals.amount)} ETH (${vals.amount} wei)`);
+    console.log('Place Bet clicked. betOn: ', vals.betOn, ` amount: ${this.web3.instance.utils.fromWei(vals.amount)} ETH (${vals.amount} wei)`);
 
     this.service.placeBet(vals.betOn, vals.amount)
       .catch(err => {
