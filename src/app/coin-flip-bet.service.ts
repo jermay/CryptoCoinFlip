@@ -16,20 +16,22 @@ export class CoinFlipBetService {
   contractBalance = new BN('0');
   isPlayerOwner = false;
   lastBetResultEventLogId: string;
+  eventEmitter: any;
 
   constructor(private contractService: ContractService) {
     this.getPastBetEvents();
-    this.subscribeToAccountChange()
+    this.subscribeToAccountChange();
+    // this.subscribeToEvents();
   }
 
   private getPastBetEvents() {
     this.contractService.getPlaceCoinFlipBet()
       .then(async c => {
         const options = {
-          fromBlock: 0,
           filter: {
             player: this.contractService.account
-          }
+          },
+          fromBlock: 0
         };
         console.log('service>getPastEvents: options: ', options);
         let betPlacedEventData = <BetPlacedEvent[]>await
@@ -48,6 +50,26 @@ export class CoinFlipBetService {
           BetResult: betResultEventData
         });
       });
+  }
+
+  subscribeToEvents() {
+    this.contractService.getPlaceCoinFlipBet()
+      .then(c => {
+        this.eventEmitter = c.events.allEvents({
+          filter: { player: this.contractService.account },
+        });
+        this.eventEmitter
+          .on('data', e => {
+            console.log('Received subbed event: ', e.event);
+            if (e.event !== 'BetResult') {
+              return;
+            }
+            console.log('BetResult received: ', e);
+            this.onBetResult(e);
+          })
+          .on('error', err => console.log(err));
+      });
+    console.log('subscribed to all events');
   }
 
   private subscribeToAccountChange() {
@@ -161,14 +183,20 @@ export class CoinFlipBetService {
     this.contractService.getPlaceCoinFlipBet()
       .then(c => {
         const options = {
-          // fromBlock: fromBlock,
-          filter: { id: queryId /*, player: this.contractService.account */ }
+          fromBlock: 0,
+          filter: {
+            id: queryId
+            // player: this.contractService.account
+          },
         };
-        c.events.BetResult(
-          options,
-          (error: any, event: any) => this.onBetResult(error, event, queryId)
-        );
-        console.log(`Subscribed to bet result. options: `, options);
+        console.log(`Subscribed to bet result. options: `, JSON.stringify(options));
+        this.eventEmitter = c.events.BetResult(options)
+          .on('data',
+            (event: any) => {
+              console.log('BetResultEvent recieved: ', event);
+              this.onBetResult(event);
+            }
+          ).on('error', err => console.log(err));
       });
   }
 
@@ -181,20 +209,21 @@ export class CoinFlipBetService {
     };
   }
 
-  onBetResult(error: any, event: any, queryId: string) {
+  onBetResult(event: any) {
     console.log('CoinFlipBetService > onBetResult');
-    if (error) {
-      console.error(error);
-      return;
-    } else if (!event || !event.returnValues.id || event.id === this.lastBetResultEventLogId) {
+    // if (error) {
+    //   console.error(error);
+    //   return;
+    // } else
+    if (!event || !event.returnValues.id || event.id === this.lastBetResultEventLogId) {
       console.log('CoinFlipBetService > onBetResult: empty or duplicate event');
       return;
     }
     const data: BetResultEvent = this.getBetResultEventFromEventData(event);
-    if (data.id != queryId) {
-      console.log(`onBetResult: event id "${data.id}" does not match target id of "${queryId}"`);
-      return;
-    }
+    // if (data.id != queryId) {
+    //   console.log(`onBetResult: event id "${data.id}" does not match target id of "${queryId}"`);
+    //   return;
+    // }
     this.lastBetResultEventLogId = event.id;
 
     this.betList.addResult(data);
