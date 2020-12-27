@@ -139,7 +139,7 @@ contract PlaceCoinFlipBet is VRFConsumerBase, Ownable {
     }
 
     function getOracleCost() public view returns (uint256) {
-        return fee * (linkPriceInWei / 10e18);
+        return fee * linkPriceInWei / 10e18;
     }
 
     function flipCoin() public returns (bytes32) {

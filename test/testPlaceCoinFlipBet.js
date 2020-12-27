@@ -39,6 +39,10 @@ contract.only("PlaceCoinFlipBet", async function (accounts) {
       deployedTokenContract = await MockToken.deployed();
     });
 
+    after(async ()=>{
+      await deployedContract.destroy({from: accounts[0]});
+    });
+
     it("should have an initial balance of 1 ether in both the owner balance and blockchain", async function () {
       const expectedValue = web3.utils.toWei(new BN("1"), "ether");
       const ownerBalance = await deployedContract.getMyBalance({
@@ -59,7 +63,7 @@ contract.only("PlaceCoinFlipBet", async function (accounts) {
     });
 
     it("should have 100 LINK", async () => {
-      const expBal = web3.utils.toWei(new BN('100'), 'ether');
+      const expBal = web3.utils.toWei(new BN("100"), "ether");
       const result = await deployedTokenContract.balanceOf(
         deployedContract.address
       );
@@ -221,9 +225,14 @@ contract.only("PlaceCoinFlipBet", async function (accounts) {
 
     it("should REVERT if the player does not have enough balance to cover the Oracle Fees", async function () {
       const fee = await contractInstance.getOracleCost();
-      await contractInstance.withdrawFunds(web3.utils.toWei(new BN("6"), "milli"), {from: accounts[1]});
-      await contractInstance.addFunds({value: fee.div(new BN('2')), from: accounts[1]});
-      
+      await contractInstance.withdrawFunds(
+        web3.utils.toWei(new BN("6"), "milli"),
+        { from: accounts[1] }
+      );
+      await contractInstance.addFunds({
+        value: fee.div(new BN("2")),
+        from: accounts[1],
+      });
 
       await truffleAssert.reverts(
         contractInstance.placeBet(betOn, betAmount, { from: accounts[1] })
@@ -334,7 +343,6 @@ contract.only("PlaceCoinFlipBet", async function (accounts) {
         return contractInstance.placeBet(betOn, amount, {
           from: fromAccount,
         });
-        
       }
 
       it("should emit a losing BetResult event with zero payout", async function () {
@@ -389,6 +397,15 @@ contract.only("PlaceCoinFlipBet", async function (accounts) {
           "owner balance not updated"
         );
       });
+    });
+  });
+
+  describe("getOracleCost", () => {
+    it("should return the correct cost in ETH", async () => {
+      const expAmount = web3.utils.toWei(new BN("200"), "micro");
+
+      const result = await contractInstance.getOracleCost();
+      expect(result.toString(10)).to.equal(expAmount.toString(10));
     });
   });
 

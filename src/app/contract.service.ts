@@ -17,7 +17,7 @@ export class ContractService {
   accountChanged: BehaviorSubject<string> = new BehaviorSubject('');
   protected placeCoinFlipBet: Promise<Contract>;
   protected contractAddress = {
-    private: '0xB5efD6E3Afc98eB0fD6cEbDB86f100deC3a20180', // dev
+    private: '0x837Cc0a50e594F162f6D2625C7a552a2c37A9b55', // dev
     kovan: '0xd0aFBcc602cbd3bbb956784e625d52D7A5665d5E',
   }
 
