@@ -58,7 +58,14 @@
     "typescript": "3.4.1"
   },
   "browser": {
-    "fs": false
+    "fs": false,
+    "http": false,
+    "https": false,
+    "crypto": false,
+    "stream": false,
+    "os": false,
+    "buffer": false,
+    "vm": false
   },
   "resolutions": {
     "buffer": "5.7.1"
