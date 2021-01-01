@@ -21,7 +21,7 @@ export class CoinFlipBetService {
   constructor(private contractService: ContractService) {
     this.getPastBetEvents();
     this.subscribeToAccountChange();
-    // this.subscribeToEvents();
+    this.subscribeToEvents();
   }
 
   private getPastBetEvents() {
@@ -152,7 +152,6 @@ export class CoinFlipBetService {
           bet.id(),
           betPlacedEvent
         );
-        this.subscribeToResult(betPlacedEvent.id, this.getBlockNumberFromResponse(res));
         this.onStuffChanged();
         return true;
       }).catch(err => {
@@ -211,19 +210,11 @@ export class CoinFlipBetService {
 
   onBetResult(event: any) {
     console.log('CoinFlipBetService > onBetResult');
-    // if (error) {
-    //   console.error(error);
-    //   return;
-    // } else
     if (!event || !event.returnValues.id || event.id === this.lastBetResultEventLogId) {
       console.log('CoinFlipBetService > onBetResult: empty or duplicate event');
       return;
     }
     const data: BetResultEvent = this.getBetResultEventFromEventData(event);
-    // if (data.id != queryId) {
-    //   console.log(`onBetResult: event id "${data.id}" does not match target id of "${queryId}"`);
-    //   return;
-    // }
     this.lastBetResultEventLogId = event.id;
 
     this.betList.addResult(data);

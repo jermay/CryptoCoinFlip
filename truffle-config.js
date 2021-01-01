@@ -57,7 +57,7 @@ module.exports = {
       network_id: "*",
       // gas: 8e6,
       // gasPrice: 20e9,
-      // websockets: true
+      websockets: true
 	  },
 
     // Another network with more advanced options...
@@ -71,12 +71,13 @@ module.exports = {
     // },
 
     kovan: {
-      provider: () => new HDWalletProvider(process.env.mnemonic, `https://kovan.infura.io/v3/${process.env.infuraProjectId}`),
+      provider: () => new HDWalletProvider(process.env.mnemonic, `wss://kovan.infura.io/ws/v3/${process.env.infuraProjectId}`),
       network_id: 42,
       gas: 8e6,
       confirmations: 2,    // # of confs to wait between deployments. (default: 0)
-      timeoutBlocks: 200,  // # of blocks before a deployment times out  (minimum/default: 50)
-      skipDryRun: true     // Skip dry run before migrations? (default: false for public nets )
+      timeoutBlocks: 20000,  // # of blocks before a deployment times out  (minimum/default: 50)
+      skipDryRun: true,     // Skip dry run before migrations? (default: false for public nets )
+      websockets: true
     }
 
     // Useful for deploying to a public network.

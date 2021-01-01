@@ -10,6 +10,7 @@ import { BetEventComponent } from './bet-event/bet-event.component';
 import { WalletComponent } from './wallet/wallet.component';
 import { DepositComponent } from './deposit/deposit.component';
 import { WithdrawComponent } from './withdraw/withdraw.component';
+import { ContractService } from './contract.service';
 
 @NgModule({
   declarations: [
@@ -25,7 +26,7 @@ import { WithdrawComponent } from './withdraw/withdraw.component';
     AppRoutingModule,
     ReactiveFormsModule
   ],
-  providers: [CoinFlipBetService],
+  providers: [ContractService, CoinFlipBetService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

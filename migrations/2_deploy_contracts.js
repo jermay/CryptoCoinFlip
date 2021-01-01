@@ -10,8 +10,8 @@ module.exports = async function (deployer, network, accounts) {
     vrfCoordinatorAddress = MockToken.address;
     linkTokenAddress = MockToken.address;
   } else if (network === "kovan") {
-    vrfCoordinatorAddress = 0xdd3782915140c8f3b190b5d67eac6dc5760c46e9;
-    linkTokenAddress = 0xa36085f69e2889c224210f603d836748e7dc0088;
+    vrfCoordinatorAddress = "0xdD3782915140c8f3b190B5D67eAc6dc5760C46E9";
+    linkTokenAddress = "0xa36085F69e2889c224210F603D836748e7dC0088" ;
   }
 
   await deployer

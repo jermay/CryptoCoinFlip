@@ -18,7 +18,7 @@ export class ContractService {
   protected placeCoinFlipBet: Promise<Contract>;
   protected contractAddress = {
     private: '0x837Cc0a50e594F162f6D2625C7a552a2c37A9b55', // dev
-    kovan: '0xd0aFBcc602cbd3bbb956784e625d52D7A5665d5E',
+    kovan: '0xa10c36F1382B67d58A946C2A604a6BB987dE69Dd',
   }
 
   constructor(private w3s: Web3Service) {
@@ -73,24 +73,4 @@ export class ContractService {
   getNetwork(): Promise<string> {
     return this.w3s.instance.eth.net.getNetworkType();
   }
-
-  // getPlaceCoinFlipBet(): Promise<Contract> {
-  //   if (this.placeCoinFlipBet) {
-  //     return this.placeCoinFlipBet;
-  //   }
-  //   console.log('ContractService>getPlaceCoinFlipBet');
-  //   this.placeCoinFlipBet = this.w3s.initWeb3()
-  //     .then(async web3 => {      
-  //       let TruffleContract = require('@truffle/contract');
-  //       let CoinFlipBetContract = TruffleContract(coinFlipBetArtifacts);
-  //       CoinFlipBetContract.setProvider(this.w3s.instance.currentProvider);
-  //       console.log('from TruffleContract: ', CoinFlipBetContract);
-  //       console.log('networks: ', CoinFlipBetContract.networks());
-  //       let deployed = await CoinFlipBetContract.deployed();
-  //       console.log('deployed contract: ', deployed);
-  //       return deployed;
-  //     });
-
-  //   return this.placeCoinFlipBet;
-  // }
 }
