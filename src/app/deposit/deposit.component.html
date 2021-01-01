@@ -1,0 +1,13 @@
+<div class="p-2">
+    <form [formGroup]="depositForm">
+        <div class="form-group row">            
+            <div class="input-group col-sm-4">
+                <input type="number" formControlName="amount" class="form-control" placeholder="Amount" min="0.001" step="0.001"/>
+                <div class="input-group-append">
+                    <span class="input-group-text">ETH</span>
+                </div>
+            </div>
+            <button type="button" class="btn btn-primary" (click)="deposit()">Deposit</button>
+        </div>
+    </form>
+</div>

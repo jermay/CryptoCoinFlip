@@ -1,14 +1,17 @@
-pragma solidity 0.5.12;
-import './PlaceCoinFlipBet.sol';
+pragma solidity ^0.6.6;
+import "./PlaceCoinFlipBet.sol";
 
 contract TestPlaceCoinFlipBet is PlaceCoinFlipBet {
-    bool public testFlipResult = true;
+  constructor(address vrfCoordinatorAddress, address linkTokenAddress)
+  PlaceCoinFlipBet(vrfCoordinatorAddress, linkTokenAddress)
+  public {}
 
-    function flipCoin() public view returns (bool) {
-        return testFlipResult;
-    }
+  function setFlipResult(bytes32 queryId, bool r) public {
+      uint256 result = r ? 1 : 0;
+      fulfillRandomness(queryId, result);
+  }
 
-    function setFlipResult(bool r) public {
-        testFlipResult = r;
-    }
+  function setOwnerBalance(uint256 amount) public {
+      balances[owner] = amount;
+  }
 }

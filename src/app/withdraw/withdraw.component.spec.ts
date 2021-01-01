@@ -1,20 +1,20 @@
 /*import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { BetEventComponent } from './bet-event.component';
+import { WithdrawComponent } from './withdraw.component';
 
-describe('BetEventComponent', () => {
-  let component: BetEventComponent;
-  let fixture: ComponentFixture<BetEventComponent>;
+describe('WithdrawComponent', () => {
+  let component: WithdrawComponent;
+  let fixture: ComponentFixture<WithdrawComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ BetEventComponent ]
+      declarations: [ WithdrawComponent ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(BetEventComponent);
+    fixture = TestBed.createComponent(WithdrawComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
