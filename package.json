@@ -4,6 +4,7 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
+    "prebuild": "truffle compile",
     "build": "ng build",
     "test": "ng test",
     "testci": "ng test --no-watch --no-progress --browsers=ChromeHeadlessCI",
@@ -58,7 +59,14 @@
     "typescript": "3.4.1"
   },
   "browser": {
-    "fs": false
+    "fs": false,
+    "http": false,
+    "https": false,
+    "crypto": false,
+    "stream": false,
+    "os": false,
+    "buffer": false,
+    "vm": false
   },
   "resolutions": {
     "buffer": "5.7.1"
